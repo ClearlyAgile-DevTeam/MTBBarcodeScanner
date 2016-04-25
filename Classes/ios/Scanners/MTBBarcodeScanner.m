@@ -696,7 +696,8 @@ static const NSInteger kErrorCodeSessionIsClosed = 1001;
     [self refreshVideoOrientation];
     
     _scanRect = scanRect;
-    self.captureOutput.rectOfInterest = [self.capturePreviewLayer metadataOutputRectOfInterestForRect:_scanRect];
+    self.captureOutput.rectOfInterest = [self rectOfInterest];
+    return;
 }
 
 #pragma mark - Getters
@@ -707,10 +708,18 @@ static const NSInteger kErrorCodeSessionIsClosed = 1001;
 
 #pragma mark - Helper Methods
 
+- (CGRect)rectOfInterest {
+    CGRect scanRectContainer = self.previewView.bounds;
+    CGAffineTransform downScale = CGAffineTransformMakeScale(1 / scanRectContainer.size.width, 1 / scanRectContainer.size.height);
+    CGRect downScaledRect = CGRectApplyAffineTransform(self.scanRect, downScale);
+    CGRect rectOfInterest = CGRectMake(downScaledRect.origin.y, downScaledRect.origin.x, downScaledRect.size.height, downScaledRect.size.width);
+    return rectOfInterest;
+}
+
 - (CGRect)rectOfInterestFromScanRect:(CGRect)scanRect {
     CGRect rect = CGRectZero;
     if (!CGRectIsEmpty(self.scanRect)) {
-        rect = [self.capturePreviewLayer metadataOutputRectOfInterestForRect:self.scanRect];
+        rect = [self rectOfInterest];
     } else {
         rect = CGRectMake(0, 0, 1, 1); // Default rectOfInterest for AVCaptureMetadataOutput
     }
